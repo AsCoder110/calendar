@@ -126,6 +126,27 @@
         .btn-add:hover { opacity: 0.85; transform: translateY(-2px); }
         .btn-add i { font-size: 1rem; }
 
+        /* ===== BOUTON MENU HAMBURGER ===== */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: 0.3s;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-toggle:hover {
+            transform: scale(1.1);
+            color: var(--accent-light);
+        }
+        .menu-toggle i {
+            font-size: 1.8rem;
+        }
+
         .download-modal-overlay {
             display: none;
             position: fixed;
@@ -653,28 +674,59 @@
             .cal-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
+            /* ===== BOUTON HAMBURGER ===== */
+            .menu-toggle {
+                display: flex !important;
+            }
+            
             .sidebar-left {
-                width: 220px;
+                width: 280px;
                 position: fixed;
                 transform: translateX(-100%);
                 z-index: 500;
-                transition: transform 0.3s ease;
-                border-radius: 0 12px 12px 0;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 0 16px 16px 0;
                 height: calc(100vh - 65px - 50px);
                 top: 65px;
+                box-shadow: 4px 0 30px rgba(0,0,0,0.3);
             }
-            .sidebar-left.open { transform: translateX(0); }
+            .sidebar-left.open { 
+                transform: translateX(0); 
+            }
+            
+            .sidebar-overlay {
+                display: block;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            .sidebar-overlay.open {
+                opacity: 1;
+                pointer-events: all;
+            }
+            
             .main-content {
                 margin-left: 0;
                 padding: 16px;
                 height: auto;
                 min-height: calc(100vh - 65px - 50px);
             }
-            .navbar { flex-wrap: wrap; gap: 8px; height: auto; padding: 10px 16px; }
+            .navbar { 
+                flex-wrap: wrap; 
+                gap: 8px; 
+                height: auto; 
+                padding: 10px 16px; 
+            }
             .app-container { margin-top: 100px; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .cal-grid { grid-template-columns: 1fr 1fr; }
-            .footer { flex-wrap: wrap; gap: 4px; height: auto; padding: 8px 16px; text-align: center; }
+            .footer { 
+                flex-wrap: wrap; 
+                gap: 4px; 
+                height: auto; 
+                padding: 8px 16px; 
+                text-align: center; 
+            }
             .page-header h2 { font-size: 1.2rem; }
             .search-table { max-width: 100%; }
             .download-modal { padding: 28px 20px; }
@@ -697,6 +749,12 @@
             Calendar<span style="color:white;">++</span>
             <span class="version">v3.0</span>
         </div>
+        
+        <!-- ===== BOUTON HAMBURGER ===== -->
+        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">
+            <i class="ri-menu-line"></i>
+        </button>
+        
         <div class="user-area">
             <button class="theme-btn" onclick="document.body.classList.toggle('light')">
                 <i class="ri-moon-line"></i> Thème
@@ -2045,7 +2103,7 @@
         });
 
         // ============================================================
-        // NAVIGATION
+        // NAVIGATION - avec fermeture automatique de la sidebar
         // ============================================================
 
         function showPage(pageId, element) {
@@ -2056,15 +2114,37 @@
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             if (element) element.classList.add('active');
 
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('open');
+            // Fermer la sidebar sur mobile après navigation
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            }
+            
             document.getElementById('mainContent').scrollTop = 0;
         }
 
+        // ============================================================
+        // TOGGLE SIDEBAR - Version améliorée
+        // ============================================================
+
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebarOverlay').classList.toggle('open');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isOpen = sidebar.classList.contains('open');
+            
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+            }
         }
+
+        // Fermer la sidebar avec l'overlay (déjà dans le HTML onclick)
+        // Fermer avec la touche Échap (ajouté ci-dessous)
 
         // ============================================================
         // TOAST
@@ -2099,13 +2179,23 @@
         // ============================================================
 
         document.addEventListener('keydown', function(e) {
+            // Ctrl+K pour focus recherche
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
                 document.querySelector('#page-methods .search-table input')?.focus();
             }
+            // Échap pour fermer la sidebar
             if (e.key === 'Escape') {
-                document.getElementById('sidebar')?.classList.remove('open');
-                document.getElementById('sidebarOverlay')?.classList.remove('open');
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+                // Fermer le modal si ouvert
+                if (document.getElementById('downloadModalOverlay').classList.contains('open')) {
+                    closeDownloadModal();
+                }
             }
         });
 
